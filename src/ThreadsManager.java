@@ -1,72 +1,83 @@
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.*;
 
 public class ThreadsManager {
 
     private record TaskEntry(Task task, Thread thread) { }
 
-    private final AtomicInteger nextTaskId = new AtomicInteger(1);
-    private final Map<Integer, TaskEntry> tasks = new ConcurrentHashMap<>();
+    private final List<TaskEntry> tasks = new ArrayList<>();
 
-    public int addTask() {
-        int taskId = nextTaskId.getAndIncrement();
+    public void addTask() {
         Task task = new Task();
-        Thread thread = new Thread(task, "Task-" + taskId);
+        Thread thread = new Thread(task, "Task-" + task.hashCode());
         thread.start();
-        tasks.put(taskId, new TaskEntry(task, thread));
-        return taskId;
+        tasks.add(new TaskEntry(task, thread));
+        System.out.println("Dodano taska: " + thread.getId());
     }
 
-    public List<Integer> addMultipleTasks(int count) {
-        List<Integer> createdIds = new ArrayList<>();
+    public void addMultipleTasks(int count) {
         for (int i = 0; i < count; i++) {
-            createdIds.add(addTask());
+            addTask();
         }
-        return createdIds;
     }
 
-    public void stopTask(int taskId) {
-        TaskEntry entry = tasks.get(taskId);
-        if (entry != null) {
-            entry.thread.interrupt();
+    public void stopTask(long threadId) {
+        for (TaskEntry entry : tasks) {
+            if (entry.thread.getId() == threadId) {
+                entry.thread.interrupt();
+                System.out.println("Zatrzymano taska: " + threadId);
+                return;
+            }
         }
+        System.out.println("Nie znaleziono taska o ID: " + threadId);
     }
 
     public void stopAllTasks() {
-        tasks.values().forEach(entry -> entry.thread.interrupt());
+        for (TaskEntry entry : tasks) {
+            entry.thread.interrupt();
+        }
+        System.out.println("Zatrzymano wszystkie taski");
     }
 
-    public void listTasks() {
-        System.out.println("\nID | Status      | Ostatnia wiadomość");
-        System.out.println("---------------------------------------");
-
-        tasks.forEach((id, entry) -> {
-            String isAlive = entry.thread.isAlive() ? "Działa   " : "Zakończone";
-            String message = entry.task.getMessage();
-            System.out.printf("%-2d | %-10s | %s%n", id, isAlive, message);
-        });
+    public int getActiveThreadCount() {
+        return Thread.activeCount();
     }
 
-    public String getTaskStatus(int taskId) {
-        TaskEntry entry = tasks.get(taskId);
+    public void listActiveTasks() {
+        Thread[] threads = new Thread[Thread.activeCount()];
+        int count = Thread.enumerate(threads);
 
-        if (entry == null)
-            return "NIE ISTNIEJE";
-
-        return entry.thread.getState().toString();
+        System.out.println("\n--- Aktywne Taski ---");
+        for (int i = 0; i < count; i++) {
+            Thread t = threads[i];
+            for (TaskEntry entry : tasks) {
+                if (entry.thread.getId() == t.getId()) {
+                    System.out.println("Task-" + t.getId() + " | Wiadomość: " + entry.task.getMessage());
+                }
+            }
+        }
     }
 
-    public Map<Integer, String> getAllTasksStatus() {
-        Map<Integer, String> statuses = new LinkedHashMap<>();
+    public void listAllTasks() {
+        System.out.println("\n--- Wszystkie Taski ---");
+        for (TaskEntry entry : tasks) {
+            System.out.println("Task-" + entry.thread.getId() + " | Status: " + entry.thread.getState());
+        }
+    }
 
-        tasks.forEach((id, entry) -> {
-            statuses.put(id, entry.thread.getState().toString());
-        });
-
-        return statuses;
+    public void taskDetails(long threadId) {
+        for (TaskEntry entry : tasks) {
+            if (entry.thread.getId() == threadId) {
+                System.out.println("\n--- Szczegóły Taska ---");
+                System.out.println("ID: " + entry.thread.getId());
+                System.out.println("Nazwa: " + entry.thread.getName());
+                System.out.println("Status: " + entry.thread.getState());
+                System.out.println("Priorytet: " + entry.thread.getPriority());
+                System.out.println("Wątek jest żywy?: " + entry.thread.isAlive());
+                System.out.println("Wynik Taska: " + entry.task.getResult());
+                System.out.println("Wiadomość Taska: " + entry.task.getMessage());
+                return;
+            }
+        }
+        System.out.println("Nie znaleziono taska o ID: " + threadId);
     }
 }

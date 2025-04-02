@@ -8,6 +8,8 @@ public class Task implements Runnable {
     private final int interruptTime;
     private final int bound;
 
+    private String result = "";
+
     public Task() {
         interruptTime = rand.nextInt(1000,2000);
         bound = rand.nextInt(100,200);
@@ -15,22 +17,36 @@ public class Task implements Runnable {
 
     @Override
     public void run() {
+        int i = 0;
+
         try {
-            for (int i = 1; i <= bound; i++) {
+
+            while (i <= bound) {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
-                message = (Thread.currentThread().getName() + ": " + i);
+                message = Integer.toString(i);
                 Thread.sleep(interruptTime);
                 Thread.yield();
+
+                i++;
             }
+
+            System.out.println(Thread.currentThread().getName() + " zakończył działanie");
+            result = Thread.currentThread().getName() + " - sukces. Wynik: " + i;
+
         } catch (InterruptedException e) {
             System.out.println(Thread.currentThread().getName() + " przerwany.");
+            result = Thread.currentThread().getName() + " - przerwany. Wynik: " + i;
         }
-        System.out.println(Thread.currentThread().getName() + " zakończył działanie");
+
     }
 
     public String getMessage() {
         return message;
+    }
+
+    public String getResult() {
+        return result;
     }
 }

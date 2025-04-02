@@ -1,5 +1,3 @@
-import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 public class Menu {
@@ -11,33 +9,38 @@ public class Menu {
         this.scanner = new Scanner(System.in);
     }
 
-    public void displayMenu() {
+    public void displayMenu() throws InterruptedException {
         while (true) {
+
+            Thread.sleep(10);
+
             System.out.println("\n" + "-".repeat(15) + " Menu " + "-".repeat(15));
-            System.out.println("1. Dodaj pojedyncze zadanie");
-            System.out.println("2. Dodaj wiele zadań");
-            System.out.println("3. Zatrzymaj zadanie po ID");
-            System.out.println("4. Zatrzymaj wszystkie zadania");
-            System.out.println("5. Pokaż wszystkie zadania");
-            System.out.println("6. Sprawdź status zadania");
-            System.out.println("7. Sprawdź status wszystkich zadań");
-            System.out.println("8. Wyjście");
-            System.out.println("\n" + "-".repeat(36));
+            System.out.println("1. Dodaj pojedynczy task");
+            System.out.println("2. Dodaj wiele tasków");
+            System.out.println("3. Zatrzymaj task");
+            System.out.println("4. Zatrzymaj wszystkie taski");
+            System.out.println("5. Liczba aktywnych wątków");
+            System.out.println("6. Wypisz aktywne taski");
+            System.out.println("7. Wypisz wszystkie taski");
+            System.out.println("8. Szczegóły taska");
+            System.out.println("9. Wyjście");
+            System.out.println("-".repeat(38));
             System.out.print("Wybierz opcję: ");
 
             int choice = getIntInput();
 
             switch (choice) {
-                case 1 -> handleAddTask();
+                case 1 -> threadsManager.addTask();
                 case 2 -> handleAddMultipleTasks();
                 case 3 -> handleStopTask();
-                case 4 -> handleStopAllTasks();
-                case 5 -> threadsManager.listTasks();
-                case 6 -> checkTaskStatus();
-                case 7 -> checkAllTasksStatus();
-                case 8 -> {
-                    handleStopAllTasks();
-                    System.out.println("Zamykanie programu");
+                case 4 -> threadsManager.stopAllTasks();
+                case 5 -> System.out.println("Liczba aktywnych wątków: " + threadsManager.getActiveThreadCount());
+                case 6 -> threadsManager.listActiveTasks();
+                case 7 -> threadsManager.listAllTasks();
+                case 8 -> handleTaskDetails();
+                case 9 -> {
+                    threadsManager.stopAllTasks();
+                    System.out.println("Zamykanie programu...");
                     return;
                 }
                 default -> System.out.println("Nieprawidłowa opcja!");
@@ -45,59 +48,45 @@ public class Menu {
         }
     }
 
-    private void handleAddTask() {
-        int taskId = threadsManager.addTask();
-        System.out.println("Dodano zadanie o ID: " + taskId);
-    }
-
     private void handleAddMultipleTasks() {
-        System.out.print("Podaj liczbę zadań do dodania: ");
+        System.out.print("Podaj liczbę tasków do dodania: ");
         int count = getIntInput();
         if (count > 0) {
-            List<Integer> ids = threadsManager.addMultipleTasks(count);
-            System.out.println("Utworzono zadania o ID: " + ids);
+            threadsManager.addMultipleTasks(count);
         } else {
             System.out.println("Nieprawidłowa liczba!");
         }
     }
 
     private void handleStopTask() {
-        System.out.print("Podaj ID zadania: ");
-        int id = getIntInput();
+        System.out.print("Podaj ID taska: ");
+        long id = getLongInput();
         threadsManager.stopTask(id);
-        System.out.println("Zatrzymano zadanie " + id);
     }
 
-    private void handleStopAllTasks() {
-        threadsManager.stopAllTasks();
-        System.out.println("Zatrzymano wszystkie zadania");
-    }
-
-    private void checkTaskStatus() {
-        System.out.print("Podaj ID zadania: ");
-        int id = getIntInput();
-        String status = threadsManager.getTaskStatus(id);
-        System.out.println("Status zadania " + id + ": " + status);
-    }
-
-    private void checkAllTasksStatus() {
-        Map<Integer, String> statuses = threadsManager.getAllTasksStatus();
-        System.out.println("\nStatusy wszystkich zadań:");
-        statuses.forEach((id, status) ->
-                System.out.printf("Zadanie %d: %s%n", id, status));
-        System.out.println("--------------------------");
+    private void handleTaskDetails() {
+        System.out.print("Podaj ID taska: ");
+        long id = getLongInput();
+        threadsManager.taskDetails(id);
     }
 
     private int getIntInput() {
-        try {
-            return scanner.nextInt();
-        } catch (NumberFormatException e) {
-            System.out.println("Nieprawidłowe dane!");
-            return -1;
+        while (!scanner.hasNextInt()) {
+            System.out.println("Nieprawidłowe dane! Podaj liczbę.");
+            scanner.next();
         }
+        return scanner.nextInt();
     }
 
-    public static void main(String[] args) {
+    private long getLongInput() {
+        while (!scanner.hasNextLong()) {
+            System.out.println("Nieprawidłowe dane! Podaj liczbę.");
+            scanner.next();
+        }
+        return scanner.nextLong();
+    }
+
+    public static void main(String[] args) throws InterruptedException {
         ThreadsManager manager = new ThreadsManager();
         Menu menu = new Menu(manager);
         menu.displayMenu();
