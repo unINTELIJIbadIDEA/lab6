@@ -5,13 +5,12 @@ public class Task implements Runnable {
     private static final Random rand = new Random();
 
     private String message;
-    private final int interruptTime;
+    private final int sleepTime;
     private final int bound;
-
     private String result = "";
 
     public Task() {
-        interruptTime = rand.nextInt(1000,2000);
+        sleepTime = rand.nextInt(1000,2000);
         bound = rand.nextInt(100,200);
     }
 
@@ -26,7 +25,7 @@ public class Task implements Runnable {
                     throw new InterruptedException();
                 }
                 message = Integer.toString(i);
-                Thread.sleep(interruptTime);
+                Thread.sleep(sleepTime);
                 Thread.yield();
 
                 i++;

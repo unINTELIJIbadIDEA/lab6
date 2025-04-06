@@ -8,10 +8,11 @@ public class ThreadsManager {
 
     public void addTask() {
         Task task = new Task();
-        Thread thread = new Thread(task, "Task-" + task.hashCode());
+        Thread thread = new Thread(task);
+        thread.setName("Task-"+thread.threadId());
         thread.start();
         tasks.add(new TaskEntry(task, thread));
-        System.out.println("Dodano taska: " + thread.getId());
+        System.out.println("Dodano taska: " + thread.threadId());
     }
 
     public void addMultipleTasks(int count) {
@@ -22,7 +23,7 @@ public class ThreadsManager {
 
     public void stopTask(long threadId) {
         for (TaskEntry entry : tasks) {
-            if (entry.thread.getId() == threadId) {
+            if (entry.thread.threadId() == threadId) {
                 entry.thread.interrupt();
                 System.out.println("Zatrzymano taska: " + threadId);
                 return;
@@ -50,8 +51,8 @@ public class ThreadsManager {
         for (int i = 0; i < count; i++) {
             Thread t = threads[i];
             for (TaskEntry entry : tasks) {
-                if (entry.thread.getId() == t.getId()) {
-                    System.out.println("Task-" + t.getId() + " | Wiadomość: " + entry.task.getMessage());
+                if (entry.thread.threadId() == t.threadId()) {
+                    System.out.println("Task-" + t.threadId() + " | Wiadomość: " + entry.task.getMessage());
                 }
             }
         }
@@ -60,15 +61,15 @@ public class ThreadsManager {
     public void listAllTasks() {
         System.out.println("\n--- Wszystkie Taski ---");
         for (TaskEntry entry : tasks) {
-            System.out.println("Task-" + entry.thread.getId() + " | Status: " + entry.thread.getState());
+            System.out.println("Task-" + entry.thread.threadId() + " | Status: " + entry.thread.getState());
         }
     }
 
     public void taskDetails(long threadId) {
         for (TaskEntry entry : tasks) {
-            if (entry.thread.getId() == threadId) {
+            if (entry.thread.threadId() == threadId) {
                 System.out.println("\n--- Szczegóły Taska ---");
-                System.out.println("ID: " + entry.thread.getId());
+                System.out.println("ID: " + entry.thread.threadId());
                 System.out.println("Nazwa: " + entry.thread.getName());
                 System.out.println("Status: " + entry.thread.getState());
                 System.out.println("Priorytet: " + entry.thread.getPriority());
